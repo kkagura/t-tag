@@ -1,0 +1,12 @@
+﻿{
+  "name": "t-tag",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.6.3",
+  "scripts": {
+    "dev:api": "pnpm --filter @t-tag/api dev",
+    "build:api": "pnpm --filter @t-tag/api build",
+    "typecheck:api": "pnpm --filter @t-tag/api typecheck",
+    "migrate:api": "pnpm --filter @t-tag/api migrate"
+  }
+}

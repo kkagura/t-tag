@@ -1,0 +1,12 @@
+﻿node_modules/
+.pnpm-store/
+
+# build outputs
+apps/**/dist/
+
+# local env
+.env
+apps/**/.env
+
+# logs
+*.log

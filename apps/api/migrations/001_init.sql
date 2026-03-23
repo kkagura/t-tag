@@ -1,0 +1,68 @@
+﻿CREATE TABLE IF NOT EXISTS users (
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  username VARCHAR(64) NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  mfa_secret VARCHAR(255) NULL,
+  status TINYINT NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_users_username (username)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS vault_items (
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT UNSIGNED NOT NULL,
+  title VARCHAR(120) NOT NULL,
+  account_ciphertext TEXT NOT NULL,
+  password_ciphertext TEXT NOT NULL,
+  note_ciphertext MEDIUMTEXT NULL,
+  custom_fields_ciphertext MEDIUMTEXT NULL,
+  crypto_version VARCHAR(20) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_vault_items_user_updated (user_id, updated_at),
+  CONSTRAINT fk_vault_items_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS tags (
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT UNSIGNED NOT NULL,
+  name VARCHAR(50) NOT NULL,
+  color VARCHAR(20) NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_tags_user_name (user_id, name),
+  CONSTRAINT fk_tags_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS vault_item_tags (
+  item_id BIGINT UNSIGNED NOT NULL,
+  tag_id BIGINT UNSIGNED NOT NULL,
+  PRIMARY KEY (item_id, tag_id),
+  CONSTRAINT fk_vault_item_tags_item FOREIGN KEY (item_id) REFERENCES vault_items (id) ON DELETE CASCADE,
+  CONSTRAINT fk_vault_item_tags_tag FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT UNSIGNED NULL,
+  action VARCHAR(64) NOT NULL,
+  target_type VARCHAR(64) NULL,
+  target_id VARCHAR(64) NULL,
+  ip VARCHAR(64) NULL,
+  ua VARCHAR(255) NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_audit_logs_user_created (user_id, created_at),
+  CONSTRAINT fk_audit_logs_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT UNSIGNED NOT NULL,
+  token_hash CHAR(64) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  revoked_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_refresh_tokens_hash (token_hash),
+  KEY idx_refresh_tokens_user (user_id),
+  CONSTRAINT fk_refresh_tokens_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
